@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping("/api/registros-medicos")
+@RequestMapping("/api/registrosmedicos")
 public class RegistrosMedicoController {
 
     @Autowired
