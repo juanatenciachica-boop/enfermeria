@@ -1,12 +1,11 @@
 package com.narvasoft.apirest.repository;
 
-import com.narvasoft.apirest.models.Usuarios;
+import com.narvasoft.apirest.models.UserTotpSecret;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
 
 @Repository
-public interface UsuariosRepository extends JpaRepository<Usuarios, Long> {
-    Optional<Usuarios> findByEmail(String email);   // ← NUEVO
+public interface UserTotpSecretRepository extends JpaRepository<UserTotpSecret, Long> {
+    Optional<UserTotpSecret> findByEmail(String email);
 }

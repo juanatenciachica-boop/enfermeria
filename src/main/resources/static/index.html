@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salud INEM - Portal de Salud Escolar</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            darkest: '#051F20',
+                            pine: '#0B2B26',
+                            tealDark: '#163832',
+                            forest: '#235347',
+                            sage: '#8EB69B',
+                            mintPale: '#DAF1DE',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Fraunces', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    animation: {
+                        'marquee': 'marquee 25s linear infinite',
+                        'float-slow': 'floatSlow 8s ease-in-out infinite',
+                        'float-mid': 'floatMid 6s ease-in-out infinite',
+                        'pulse-subtle': 'pulseSubtle 3s ease-in-out infinite',
+                        'blob-spin': 'blobSpin 20s linear infinite',
+                    },
+                    keyframes: {
+                        marquee: {
+                            '0%': { transform: 'translateX(0%)' },
+                            '100%': { transform: 'translateX(-50%)' }
+                        },
+                        floatSlow: {
+                            '0%, 100%': { transform: 'translateY(0px) rotate(0deg)' },
+                            '50%': { transform: 'translateY(-20px) rotate(3deg)' }
+                        },
+                        floatMid: {
+                            '0%, 100%': { transform: 'translateY(0px) scale(1)' },
+                            '50%': { transform: 'translateY(-12px) scale(1.03)' }
+                        },
+                        pulseSubtle: {
+                            '0%, 100%': { opacity: 1 },
+                            '50%': { opacity: 0.85 }
+                        },
+                        blobSpin: {
+                            '0%': { transform: 'rotate(0deg) scale(1)' },
+                            '50%': { transform: 'rotate(180deg) scale(1.15)' },
+                            '100%': { transform: 'rotate(360deg) scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #DAF1DE; 
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #DAF1DE;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #235347;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #163832;
+        }
+        .multiply-blend {
+            mix-blend-mode: multiply;
+        }
+        .glass-panel {
+            background: rgba(218, 241, 222, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        /* toast para feedback de backup */
+        #backupToast {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        #backupToast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="text-[#051F20] overflow-x-hidden selection:bg-brand-sage selection:text-brand-darkest antialiased">
+
+<!-- GUARD DE SESIÓN + BIENVENIDA -->
+<script>
+    const usuarioGuardado = localStorage.getItem("usuarioSaludINEM");
+    if (!usuarioGuardado) {
+        // Si no hay sesión, mandarlo al login
+        window.location.href = "inicio.html";
+    } else {
+        const u = JSON.parse(usuarioGuardado);
+        window.addEventListener("DOMContentLoaded", () => {
+            // Insertar chip de usuario junto al botón "Probar Demo"
+            const headerActions = document.querySelector("header .flex.items-center.gap-3");
+            if (headerActions) {
+                const chip = document.createElement("div");
+                chip.className = "hidden md:flex items-center gap-2 bg-white/70 border border-brand-sage/40 rounded-full px-3 py-1.5 text-[11px] font-bold text-brand-pine";
+                chip.innerHTML = `
+                    <span class="w-6 h-6 rounded-full bg-brand-pine text-brand-mintPale flex items-center justify-center text-[10px]">
+                        ${u.nombre.charAt(0).toUpperCase()}
+                    </span>
+                    <span>${u.nombre.split(" ")[0]} • ${u.cargo || "Usuario"}</span>
+                    <button onclick="cerrarSesion()" class="text-red-600 hover:text-red-800 ml-1">Salir</button>
+                `;
+                headerActions.appendChild(chip);
+            }
+        });
+    }
+
+    function cerrarSesion() {
+        localStorage.removeItem("usuarioSaludINEM");
+        window.location.href = "inicio.html";
+    }
+</script>
+
+<!-- DECORATIVE BLOBS -->
+<div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute top-[20%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-brand-sage/20 blur-[120px] animate-blob-spin"></div>
+    <div class="absolute top-[60%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-brand-forest/15 blur-[130px] animate-blob-spin" style="animation-direction: reverse;"></div>
+    <div class="absolute bottom-[-10%] left-[20%] w-[35vw] h-[35vw] rounded-full bg-brand-mintPale/40 blur-[100px] animate-float-slow"></div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="relative z-50 bg-brand-darkest text-brand-mintPale text-xs md:text-sm py-2 px-4 text-center font-medium flex items-center justify-center gap-2 shadow-inner">
+    <span class="inline-block w-2 h-2 rounded-full bg-brand-sage animate-pulse"></span>
+    <span>Proyecto de Grado 2026 • Institución Educativa INEM José Félix de Restrepo • Medellín</span>
+</div>
+
+<!-- HEADER -->
+<header class="w-full bg-brand-mintPale px-4 md:px-12 py-3 sticky top-0 z-50 shadow-md backdrop-blur-md bg-opacity-90 transition-all duration-300">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+        <a href="https://inemjose.edu.co/colegio/newsite2021/" class="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-brand-forest rounded-full p-1 transition-all">
+            <div class="w-10 h-10 md:w-12 md:h-12 bg-white rounded-full p-1.5 shadow-sm overflow-hidden flex items-center justify-center group-hover:scale-105 group-hover:rotate-3 transition-all duration-300">
+                <img src="inem.png" alt="Escudo INEM" class="w-full h-full object-contain multiply-blend" onerror="this.src='https://placehold.co/100x100/0B2B26/DAF1DE?text=INEM'">
+            </div>
+            <div>
+                <span class="font-serif font-black text-lg md:text-xl tracking-tight text-brand-darkest block">Salud <span class="text-brand-forest">INEM</span></span>
+                <span class="text-[9px] tracking-widest uppercase font-bold text-brand-forest block">Unificando Cuidado • 2026</span>
+            </div>
+        </a>
+        <nav class="hidden md:flex items-center gap-5 bg-brand-pine/5 px-5 py-2 rounded-full font-semibold text-brand-pine text-xs border border-brand-pine/10">
+            <a href="#proposito" class="hover:text-brand-forest transition-colors relative py-0.5">Propósito</a>
+            <span class="text-brand-pine/20">|</span>
+            <a href="#beneficios" class="hover:text-brand-forest transition-colors relative py-0.5">Beneficios</a>
+            <span class="text-brand-pine/20">|</span>
+            <a href="#simulador" class="hover:text-brand-forest transition-colors relative py-0.5">Simulador</a>
+            <span class="text-brand-pine/20">|</span>
+            <a href="#nosotros" class="hover:text-brand-forest transition-colors relative py-0.5">Nosotros</a>
+        </nav>
+        <div class="flex items-center gap-3">
+            <a href="#simulador" class="bg-brand-pine hover:bg-brand-darkest text-brand-mintPale font-bold text-xs px-3.5 py-2 md:px-5 md:py-2.5 rounded-full transition-all duration-300 transform active:scale-95 shadow-md hover:shadow-lg inline-flex items-center gap-1.5 border border-brand-pine/20">
+                <span>Probar Demo</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+            </a>
+        </div>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="relative bg-gradient-to-b from-brand-mintPale via-brand-mintPale/90 to-transparent pt-8 pb-20 px-4 md:px-12 overflow-hidden z-10">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div class="lg:col-span-7 flex flex-col justify-center space-y-6 z-10">
+            <div class="inline-flex items-center gap-2 bg-brand-sage/25 border border-brand-sage/50 text-brand-pine px-4 py-1.5 rounded-full text-xs font-semibold self-start uppercase tracking-wider shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-brand-forest animate-pulse"></span>
+                Transformando la Enfermería Escolar
+            </div>
+            <h1 class="font-serif text-5xl sm:text-7xl lg:text-8xl font-black leading-none text-brand-darkest tracking-tight">
+                salud <br>
+                <span class="text-brand-forest italic font-normal inline-block transform -rotate-1 relative">
+                        INEM
+                        <span class="absolute -bottom-2 left-0 w-full h-2 bg-brand-sage/40 rounded-full"></span>
+                    </span>
+            </h1>
+            <p class="text-base sm:text-lg text-brand-pine max-w-xl font-medium leading-relaxed">
+                Eficiencia y rapidez en la atención de salud escolar. Un paso firme hacia el futuro en 2026, digitalizando y optimizando procesos clínicos para cuidar mejor a nuestros estudiantes.
+            </p>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-2">
+                <a href="#simulador" class="bg-brand-forest text-brand-mintPale hover:bg-brand-pine px-6 py-3.5 rounded-2xl text-center font-bold text-base shadow-lg hover:shadow-xl transition-all duration-300 rounded-tr-none rounded-bl-none">
+                    Explorar Aplicativo
+                </a>
+                <a href="#proposito" class="border-2 border-brand-forest text-brand-forest hover:bg-brand-sage/20 px-6 py-3.5 rounded-2xl text-center font-bold text-base transition-all rounded-tl-none rounded-br-none bg-white/20 backdrop-blur-sm">
+                    Conocer Propósito
+                </a>
+            </div>
+            <div class="grid grid-cols-3 gap-4 pt-6 border-t border-brand-sage/40">
+                <div>
+                    <span class="block text-2xl sm:text-3xl font-serif font-bold text-brand-pine">100%</span>
+                    <span class="text-[10px] font-semibold text-brand-forest uppercase tracking-wider">Cero Papel</span>
+                </div>
+                <div>
+                    <span class="block text-2xl sm:text-3xl font-serif font-bold text-brand-pine">&lt; 1 min</span>
+                    <span class="text-[10px] font-semibold text-brand-forest uppercase tracking-wider">Acceso Historial</span>
+                </div>
+                <div>
+                    <span class="block text-2xl sm:text-3xl font-serif font-bold text-brand-pine">Seguro</span>
+                    <span class="text-[10px] font-semibold text-brand-forest uppercase tracking-wider">Habeas Data</span>
+                </div>
+            </div>
+        </div>
+        <div class="lg:col-span-5 relative mt-6 lg:mt-0">
+            <div class="absolute -top-6 -left-6 w-full h-full border border-brand-sage/30 rounded-[3rem_6rem_4rem_5rem] -z-10 animate-pulse"></div>
+            <div class="bg-brand-darkest text-brand-mintPale p-6 md:p-8 rounded-[4rem_1.5rem_4rem_1.5rem] shadow-2xl transform rotate-1 hover:rotate-0 transition-transform duration-500 relative overflow-hidden group">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-brand-forest/25 rounded-bl-full pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-brand-sage inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-brand-forest inline-block"></span>
+                        <span class="w-3 h-3 rounded-full bg-brand-mintPale inline-block"></span>
+                    </div>
+                    <span class="text-[10px] uppercase tracking-widest bg-brand-forest/40 px-3 py-1 rounded-full text-brand-sage font-bold">Portal Escolar 2026</span>
+                </div>
+                <h3 class="font-serif text-2xl md:text-3xl font-bold mb-4 leading-tight">La tecnología al servicio del cuidado.</h3>
+                <p class="text-brand-sage text-xs md:text-sm leading-relaxed mb-6">
+                    "Transformando la enfermería de la Institución Educativa INEM José Félix de Restrepo, unificando tecnología y cuidado humano en este 2026."
+                </p>
+                <div class="flex items-center gap-4 pt-6 border-t border-brand-sage/20">
+                    <div class="w-10 h-10 rounded-full bg-brand-sage/20 flex items-center justify-center font-serif text-brand-sage text-xl font-bold">“</div>
+                    <div>
+                        <p class="text-[10px] font-bold text-brand-mintPale uppercase tracking-wider">Filosofía de Cuidado</p>
+                        <p class="text-[10px] text-brand-sage">Salud INEM • 2026</p>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute -bottom-6 -left-4 md:-left-10 bg-white text-brand-darkest p-4 rounded-[2rem] shadow-xl border border-brand-sage/30 max-w-[200px] animate-float-slow">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="bg-emerald-100 text-emerald-700 p-2 rounded-xl">
+                        <i data-lucide="leaf" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-black uppercase tracking-wider">Sostenible</p>
+                        <p class="text-[10px] text-gray-500">Cero Papel</p>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-600">Reducción del impacto ambiental a través del portal digital de salud.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- WAVES -->
+<div class="relative -mt-12 z-20 pointer-events-none">
+    <svg class="w-full h-16 fill-white opacity-40 absolute top-0 left-0" viewBox="0 0 1440 74" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,20 C480,80 960,-10 1440,30 L1440,74 L0,74 Z"></path>
+    </svg>
+    <svg class="w-full h-16 fill-white relative z-10" viewBox="0 0 1440 74" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,32 C480,96 960,0 1440,32 L1440,74 L0,74 Z"></path>
+    </svg>
+</div>
+
+<!-- PROPÓSITO -->
+<section id="proposito" class="bg-white py-16 px-4 md:px-12 relative z-10 -mt-1 overflow-hidden">
+    <div class="absolute right-[-10%] top-[10%] w-96 h-96 bg-brand-mintPale/30 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="max-w-7xl mx-auto relative z-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end mb-16">
+            <div class="lg:col-span-6">
+                <span class="text-brand-forest uppercase tracking-widest font-bold text-xs block mb-2">¿QUIÉNES SOMOS & PROPÓSITO?</span>
+                <h2 class="font-serif text-4xl md:text-6xl font-black text-brand-darkest leading-tight">
+                    Modernizando el trabajo de enfermería
+                </h2>
+            </div>
+            <div class="lg:col-span-6">
+                <p class="text-brand-pine text-sm md:text-base leading-relaxed font-medium">
+                    Somos un equipo de estudiantes comprometidos con la innovación tecnológica en la gestión de salud escolar. Facilitamos el cuidado preventivo y agilizamos la respuesta ante cualquier situación médica dentro de nuestra institución.
+                </p>
+            </div>
+        </div>
+        <div class="bg-brand-mintPale rounded-[5rem_2rem_5rem_2rem] p-8 md:p-12 mb-16 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center border border-brand-sage/20 relative shadow-inner">
+            <div class="absolute right-10 bottom-0 w-32 h-32 bg-brand-sage/20 rounded-full blur-xl"></div>
+            <div class="lg:col-span-4 relative z-10">
+                <h4 class="font-serif text-2xl md:text-3xl font-bold text-brand-darkest mb-3">Uniendo Fuerzas</h4>
+                <p class="text-xs text-brand-pine leading-relaxed">
+                    Nuestra propuesta integra tecnología de punta en 2026 para crear un ecosistema escolar más sano, consciente y conectado.
+                </p>
+                <div class="mt-6 flex gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-brand-forest/15 text-brand-forest">
+                        <i data-lucide="check" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <p class="font-bold text-xs text-brand-darkest">Eficiencia Constatada</p>
+                        <p class="text-[10px] text-gray-600">Procesos optimizados al instante.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-6 relative z-10">
+                <div class="bg-white p-6 rounded-[3rem_1rem_1rem_1rem] shadow-sm border border-brand-sage/15 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-10 h-10 rounded-full bg-brand-mintPale flex items-center justify-center text-brand-forest mb-4">
+                        <i data-lucide="award" class="w-5 h-5"></i>
+                    </div>
+                    <h5 class="font-bold text-brand-darkest text-sm mb-1">Eficiencia</h5>
+                    <p class="text-xs text-brand-pine">Rapidez que se nota en cada consulta realizada.</p>
+                </div>
+                <div class="bg-white p-6 rounded-[1rem_3rem_1rem_1rem] shadow-sm border border-brand-sage/15 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-10 h-10 rounded-full bg-brand-mintPale flex items-center justify-center text-brand-forest mb-4">
+                        <i data-lucide="zap" class="w-5 h-5"></i>
+                    </div>
+                    <h5 class="font-bold text-brand-darkest text-sm mb-1">Velocidad</h5>
+                    <p class="text-xs text-brand-pine">En los procesos clínicos de ingreso y triaje.</p>
+                </div>
+                <div class="bg-white p-6 rounded-[1rem_1rem_3rem_1rem] shadow-sm border border-brand-sage/15 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div class="w-10 h-10 rounded-full bg-brand-mintPale flex items-center justify-center text-brand-forest mb-4">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <h5 class="font-bold text-brand-darkest text-sm mb-1">Conexión</h5>
+                    <p class="text-xs text-brand-pine">Conectando la comunidad educativa de inmediato.</p>
+                </div>
+            </div>
+        </div>
+        <div id="beneficios" class="scroll-mt-24 relative z-10">
+            <div class="text-center max-w-xl mx-auto mb-12">
+                <span class="bg-brand-sage/20 text-brand-forest text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full inline-block mb-2">Características del Portal</span>
+                <h3 class="font-serif text-3xl md:text-5xl font-bold text-brand-darkest">Beneficios Clave de Salud INEM</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="group bg-brand-mintPale/40 hover:bg-white p-6 rounded-[3rem_1rem_3rem_1rem] border border-brand-sage/20 hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[250px] hover:-translate-y-1">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-brand-pine text-brand-mintPale flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                            <i data-lucide="cpu" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-serif text-lg font-bold text-brand-darkest mb-2">Eficiencia Digital</h4>
+                        <p class="text-xs text-brand-pine leading-relaxed mb-4">
+                            Optimización integral de todos los procesos clínicos dentro del INEM para lograr una atención mucho más ágil y humana.
+                        </p>
+                    </div>
+                    <span class="text-[10px] font-bold text-brand-forest uppercase tracking-widest flex items-center gap-1.5 group-hover:gap-3 transition-all">
+                            Automatizado <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </span>
+                </div>
+                <div class="group bg-brand-mintPale/40 hover:bg-white p-6 rounded-[1rem_3rem_1rem_3rem] border border-brand-sage/20 hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[250px] hover:-translate-y-1">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-brand-pine text-brand-mintPale flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                            <i data-lucide="leaf" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-serif text-lg font-bold text-brand-darkest mb-2">Cero Papel</h4>
+                        <p class="text-xs text-brand-pine leading-relaxed mb-4">
+                            Digitalización total de informes diarios, fichas de salud, consentimientos y registros epidemiológicos.
+                        </p>
+                    </div>
+                    <span class="text-[10px] font-bold text-brand-forest uppercase tracking-widest flex items-center gap-1.5 group-hover:gap-3 transition-all">
+                            Sostenible <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </span>
+                </div>
+                <div class="group bg-brand-mintPale/40 hover:bg-white p-6 rounded-[3rem_1rem_3rem_1rem] border border-brand-sage/20 hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[250px] hover:-translate-y-1">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-brand-pine text-brand-mintPale flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                            <i data-lucide="heart-handshake" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-serif text-lg font-bold text-brand-darkest mb-2">Mejor Atención</h4>
+                        <p class="text-xs text-brand-pine leading-relaxed mb-4">
+                            Acceso inmediato y ultra rápido a los historiales clínicos de los estudiantes para brindar un diagnóstico preciso.
+                        </p>
+                    </div>
+                    <span class="text-[10px] font-bold text-brand-forest uppercase tracking-widest flex items-center gap-1.5 group-hover:gap-3 transition-all">
+                            Instantáneo <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </span>
+                </div>
+                <div class="group bg-brand-mintPale/40 hover:bg-white p-6 rounded-[1rem_3rem_1rem_3rem] border border-brand-sage/20 hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[250px] hover:-translate-y-1">
+                    <div>
+                        <div class="w-12 h-12 rounded-2xl bg-brand-pine text-brand-mintPale flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                            <i data-lucide="shield-check" class="w-6 h-6"></i>
+                        </div>
+                        <h4 class="font-serif text-lg font-bold text-brand-darkest mb-2">Seguridad de Datos</h4>
+                        <p class="text-xs text-brand-pine leading-relaxed mb-4">
+                            Máxima protección de la información sensible de los menores de edad y acudientes según leyes de Habeas Data.
+                        </p>
+                    </div>
+                    <span class="text-[10px] font-bold text-brand-forest uppercase tracking-widest flex items-center gap-1.5 group-hover:gap-3 transition-all">
+                            Protegido <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- WAVE -->
+<div class="relative z-20 -mt-16 pointer-events-none">
+    <svg class="w-full h-20 fill-brand-mintPale opacity-50 absolute top-0 left-0" viewBox="0 0 1440 74" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,42 C480,-10 960,80 1440,30 L1440,74 L0,74 Z"></path>
+    </svg>
+    <svg class="w-full h-20 fill-brand-mintPale relative z-10" viewBox="0 0 1440 74" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,32 C380,-5 1060,80 1440,32 L1440,74 L0,74 Z"></path>
+    </svg>
+</div>
+
+<!-- SIMULADOR ACTUALIZADO -->
+<section id="simulador" class="bg-brand-mintPale py-16 px-4 md:px-12 scroll-mt-12 relative z-10 -mt-1 overflow-hidden">
+    <div class="max-w-7xl mx-auto relative z-10">
+        <div class="text-center max-w-2xl mx-auto mb-12">
+            <span class="bg-brand-forest text-brand-mintPale text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full inline-block mb-2">Simulador en tiempo real</span>
+            <h3 class="font-serif text-3xl md:text-5xl font-bold text-brand-darkest mb-3">Prueba el Portal de Salud INEM</h3>
+            <p class="text-xs md:text-sm text-brand-pine">
+                Experimenta cómo la enfermería de la Institución puede gestionar visitas, consultar historiales y registrar novedades médicas en solo segundos.
+            </p>
+        </div>
+
+        <div class="bg-white rounded-[4rem_1.5rem_4rem_1.5rem] shadow-2xl overflow-hidden border border-brand-sage/40 grid grid-cols-1 lg:grid-cols-12 -mt-4 transform hover:scale-[1.005] transition-all duration-500">
+
+            <!-- PANEL IZQUIERDO: FORMULARIO (Sin temperatura, con estado manual) -->
+            <div class="lg:col-span-4 bg-brand-pine text-brand-mintPale p-6 md:p-8 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -top-10 -left-10 w-32 h-32 bg-brand-forest/30 rounded-full blur-2xl"></div>
+
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-6">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span class="text-[10px] uppercase tracking-widest text-brand-sage font-bold">Formulario de Consulta</span>
+                    </div>
+
+                    <h4 class="font-serif text-lg md:text-xl font-bold mb-3">Registrar atención médica</h4>
+                    <p class="text-[11px] text-brand-sage leading-relaxed mb-6">
+                        Ingresa los datos del estudiante, el motivo y el estado de la atención.
+                    </p>
+
+                    <form id="formConsulta" onsubmit="return false;" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-brand-sage mb-1 font-bold">Nombre Completo del Estudiante *</label>
+                            <input type="text" id="inputNombre" placeholder="Ej. Salomé Machado Sánchez" class="w-full bg-brand-forest text-brand-mintPale rounded-xl px-3 py-2.5 text-xs border border-brand-sage/30 focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder:text-brand-sage/50">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-wider text-brand-sage mb-1 font-bold">Grado *</label>
+                                <select id="inputGrado" class="w-full bg-brand-forest text-brand-mintPale rounded-xl px-3 py-2.5 text-xs border border-brand-sage/30 focus:outline-none focus:ring-2 focus:ring-brand-sage">
+                                    <option value="6">6°</option>
+                                    <option value="7">7°</option>
+                                    <option value="8">8°</option>
+                                    <option value="9">9°</option>
+                                    <option value="10" selected>10°</option>
+                                    <option value="11">11°</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] uppercase tracking-wider text-brand-sage mb-1 font-bold">Sección *</label>
+                                <input type="text" id="inputSeccion" placeholder="Ej. 04" class="w-full bg-brand-forest text-brand-mintPale rounded-xl px-3 py-2.5 text-xs border border-brand-sage/30 focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder:text-brand-sage/50">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-brand-sage mb-1 font-bold">Motivo Principal de la Consulta *</label>
+                            <textarea id="inputMotivo" rows="2" placeholder="Describe cómo te sientes (ej. dolor de cabeza, mareo, raspadura). Puedes incluir la temperatura si lo deseas." class="w-full bg-brand-forest text-brand-mintPale rounded-xl px-3 py-2.5 text-xs border border-brand-sage/30 focus:outline-none focus:ring-2 focus:ring-brand-sage placeholder:text-brand-sage/50 resize-none"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-wider text-brand-sage mb-1 font-bold">Estado de la Atención *</label>
+                            <select id="inputEstado" class="w-full bg-brand-forest text-brand-mintPale rounded-xl px-3 py-2.5 text-xs border border-brand-sage/30 focus:outline-none focus:ring-2 focus:ring-brand-sage">
+                                <option value="alta">Dado de alta</option>
+                                <option value="observacion">En observación</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="pt-6 relative z-10">
+                    <button onclick="registrarVisita()" class="w-full bg-brand-sage text-brand-darkest hover:bg-brand-mintPale font-bold py-3 px-4 rounded-xl text-xs transition-all duration-200 transform active:scale-[0.98] shadow-lg flex items-center justify-center gap-1.5">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>Registrar en Portal</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: DASHBOARD (Sin columna Temp) -->
+            <div class="lg:col-span-8 bg-slate-50 p-6 md:p-8 flex flex-col justify-between">
+                <div>
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-gray-200 gap-3">
+                        <div>
+                            <span class="text-[10px] font-bold text-brand-forest bg-brand-mintPale px-2.5 py-1 rounded-full uppercase tracking-wider font-sans">Módulo Enfermería</span>
+                            <h5 class="text-base font-black text-brand-darkest mt-1">Panel de Control General</h5>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] text-gray-500 font-medium">Buscador:</span>
+                            <div class="relative">
+                                <input type="text" placeholder="Buscar..." class="bg-white border border-gray-300 rounded-lg py-1.5 px-3 text-[10px] w-36 focus:outline-none focus:ring-1 focus:ring-brand-forest" readonly value="Búsqueda Inteligente">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6">
+                        <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm text-center transform hover:scale-105 transition-transform">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Atenciones Hoy</span>
+                            <span id="countHoy" class="block text-lg font-bold text-brand-darkest">14</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm text-center transform hover:scale-105 transition-transform">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">En Reposo</span>
+                            <span id="countReposo" class="block text-lg font-bold text-amber-600">1</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm text-center transform hover:scale-105 transition-transform">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Alertas Activas</span>
+                            <span id="countAlertas" class="block text-lg font-bold text-red-500">0</span>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm text-center transform hover:scale-105 transition-transform">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold tracking-wider">Ahorro de Hojas</span>
+                            <span id="countHojas" class="block text-lg font-bold text-emerald-600">1,248</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <h6 class="text-[10px] font-bold text-brand-pine uppercase tracking-wider">Historial de Registro en Vivo</h6>
+                            <span class="text-[9px] text-gray-400 id-refresh italic">Actualización instantánea</span>
+                        </div>
+                        <div class="overflow-x-auto bg-white rounded-2xl border border-gray-100 shadow-sm">
+                            <table class="w-full text-left border-collapse text-[11px]">
+                                <thead>
+                                <tr class="bg-gray-100 text-gray-500 uppercase text-[8px] tracking-wider border-b border-gray-200">
+                                    <th class="py-2.5 px-4 font-bold">Hora / Fecha</th>
+                                    <th class="py-2.5 px-4 font-bold">Estudiante</th>
+                                    <th class="py-2.5 px-4 font-bold">Motivo</th>
+                                    <th class="py-2.5 px-4 font-bold">Estado / Observación</th>
+                                </tr>
+                                </thead>
+                                <tbody id="simTableBody" class="divide-y divide-gray-100">
+                                <tr>
+                                    <td class="py-2.5 px-4 text-gray-500 font-medium">08:15 AM</td>
+                                    <td class="py-2.5 px-4 font-bold text-brand-darkest">Mateo Gómez <span class="text-[9px] text-gray-400 font-normal">10-2</span></td>
+                                    <td class="py-2.5 px-4 text-brand-forest font-semibold">Cefalea (Dolor de cabeza) - Temp: 36.2°C</td>
+                                    <td class="py-2.5 px-4"><span class="bg-emerald-100 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Dado de alta</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-2.5 px-4 text-gray-500 font-medium">07:40 AM</td>
+                                    <td class="py-2.5 px-4 font-bold text-brand-darkest">Camila Restrepo <span class="text-[9px] text-gray-400 font-normal">11-1</span></td>
+                                    <td class="py-2.5 px-4 text-brand-forest font-semibold">Trauma leve (Tobillo) - Temp: 36.7°C</td>
+                                    <td class="py-2.5 px-4"><span class="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full font-bold">En observación</span></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-gray-500 gap-2">
+                    <div class="flex items-center gap-1.5">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                        <span>Servidor Salud INEM: Online (Medellín, CO)</span>
+                    </div>
+                    <div id="feedbackMsg" class="text-brand-forest font-bold transition-opacity duration-300 opacity-0">
+                        ¡Registro insertado con éxito!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SLANTED WAVE -->
+<div class="relative z-20 -mt-10 pointer-events-none">
+    <svg class="w-full h-24 fill-brand-darkest" viewBox="0 0 1440 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,80 C320,130 960,-20 1440,60 L1440,120 L0,120 Z"></path>
+    </svg>
+</div>
+
+<!-- SECCIÓN OSCURA -->
+<section class="bg-brand-darkest text-brand-mintPale py-20 px-4 md:px-12 relative z-10 -mt-1 overflow-hidden">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div class="lg:col-span-5 relative">
+            <div class="bg-brand-pine rounded-[3rem_1rem_3rem_1rem] p-4 shadow-2xl border border-brand-sage/20 relative transform hover:-rotate-1 transition-transform duration-500">
+                <div class="bg-white text-brand-darkest rounded-[2rem_0.5rem_2rem_0.5rem] p-5 overflow-hidden">
+                    <div class="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-full bg-brand-mintPale flex items-center justify-center text-brand-forest">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="text-[9px] font-bold text-gray-400 uppercase font-sans">Estadísticas</p>
+                                <p class="text-[11px] font-black text-brand-darkest">Análisis de Consultas</p>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">Mensual</span>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-[9px] mb-1 font-bold text-gray-600">
+                                <span>Cefaleas y Fatigas</span>
+                                <span>38%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-brand-forest h-full rounded-full" style="width: 38%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[9px] mb-1 font-bold text-gray-600">
+                                <span>Lesiones y Esguinces</span>
+                                <span>24%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-brand-sage h-full rounded-full" style="width: 24%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[9px] mb-1 font-bold text-gray-600">
+                                <span>Virosis y Fiebres</span>
+                                <span>18%</span>
+                            </div>
+                            <div class="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-brand-pine h-full rounded-full" style="width: 18%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-brand-mintPale/50 rounded-xl border border-brand-sage/20 text-center">
+                        <p class="text-[9px] font-medium text-brand-pine">
+                            "La recopilación de datos epidemiológicos en 2026 nos permite actuar proactivamente."
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute -bottom-4 -right-4 bg-brand-sage text-brand-darkest font-bold py-2.5 px-4 rounded-xl text-[10px] uppercase tracking-wider shadow-lg animate-float-slow">
+                📊 Monitoreo Clínico
+            </div>
+        </div>
+        <div class="lg:col-span-7 space-y-6">
+            <span class="text-brand-sage text-xs font-bold uppercase tracking-widest block">PROYECTO DE GRADO 2026</span>
+            <h3 class="font-serif text-3xl md:text-5xl font-bold leading-tight">
+                La tecnología al servicio de la salud, cuidando mejor a nuestros estudiantes.
+            </h3>
+            <p class="text-brand-sage/80 text-sm md:text-base leading-relaxed font-medium">
+                Salud INEM moderniza integralmente la enfermería escolar reduciendo al mínimo el impacto ambiental, suprimiendo la necesidad de archivar en papel y acelerando la comunicación entre directivos, enfermeras, acudientes y estudiantes.
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div class="flex gap-3">
+                    <div class="text-brand-sage flex-shrink-0">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm mb-1">Cuidado Sostenible</h5>
+                        <p class="text-xs text-brand-sage/60">Reducción sustancial del uso de papel en procesos de registro clínico.</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <div class="text-brand-sage flex-shrink-0">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="font-bold text-sm mb-1">Toma de Decisiones</h5>
+                        <p class="text-xs text-brand-sage/60">Visualización de incidencias para enfocar campañas de prevención de salud.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- BANNER MÁRQUEE -->
+<div class="relative z-20 bg-brand-forest py-4 overflow-hidden border-y border-brand-sage/20 shadow-md">
+    <div class="flex whitespace-nowrap animate-marquee">
+        <span class="text-brand-mintPale font-serif text-base font-bold tracking-widest uppercase mx-4">★ SALUD INEM • EL FUTURO DE LA SALUD ESCOLAR ★ PROYECTO 2026 ★ EFICIENCIA DIGITAL ★ CERO PAPEL ★ SEGURIDAD EN DATOS ★</span>
+        <span class="text-brand-mintPale font-serif text-base font-bold tracking-widest uppercase mx-4">★ SALUD INEM • EL FUTURO DE LA SALUD ESCOLAR ★ PROYECTO 2026 ★ EFICIENCIA DIGITAL ★ CERO PAPEL ★ SEGURIDAD EN DATOS ★</span>
+        <span class="text-brand-mintPale font-serif text-base font-bold tracking-widest uppercase mx-4">★ SALUD INEM • EL FUTURO DE LA SALUD ESCOLAR ★ PROYECTO 2026 ★ EFICIENCIA DIGITAL ★ CERO PAPEL ★ SEGURIDAD EN DATOS ★</span>
+    </div>
+</div>
+
+<!-- NOSOTROS -->
+<section id="nosotros" class="bg-gradient-to-b from-brand-darkest via-white to-brand-mintPale/50 py-20 px-4 md:px-12 scroll-mt-12 relative z-10">
+    <div class="max-w-7xl mx-auto relative z-10">
+        <div class="text-center max-w-xl mx-auto mb-16">
+            <span class="bg-brand-mintPale text-brand-forest text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full inline-block mb-2 shadow-sm">Equipo Desarrollador</span>
+            <h3 class="font-serif text-3xl md:text-5xl font-bold text-brand-darkest">¿Quiénes están detrás de Salud INEM?</h3>
+            <p class="text-xs text-brand-pine mt-2">
+                Estudiantes dedicados a unir la tecnología de software y el cuidado en salud de nuestra institución educativa.
+            </p>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+            <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[3rem_1rem_3rem_1rem] border border-brand-sage/20 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-lg">
+                    <div>
+                        <div class="w-12 h-12 rounded-full bg-brand-pine text-brand-mintPale flex items-center justify-center font-serif text-lg font-black mb-4 shadow-sm">JA</div>
+                        <h4 class="font-serif text-xl font-bold text-brand-darkest">Juan Pablo Atencia</h4>
+                        <p class="text-xs text-brand-forest font-bold mb-3 uppercase tracking-wider">Desarrollador de Salud & Tecnología</p>
+                        <p class="text-[11px] text-brand-pine leading-relaxed">
+                            Enfocado en el diseño lógico, la arquitectura técnica del portal escolar y la implementación del flujo de datos en tiempo real.
+                        </p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-brand-sage/20 flex gap-2 text-brand-forest">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Estudiante INEM</span>
+                    </div>
+                </div>
+                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[1rem_3rem_1rem_3rem] border border-brand-sage/20 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-lg">
+                    <div>
+                        <div class="w-12 h-12 rounded-full bg-brand-pine text-brand-mintPale flex items-center justify-center font-serif text-lg font-black mb-4 shadow-sm">MB</div>
+                        <h4 class="font-serif text-xl font-bold text-brand-darkest">Manuela Berrio</h4>
+                        <p class="text-xs text-brand-forest font-bold mb-3 uppercase tracking-wider">Investigación & Gestión del Cuidado</p>
+                        <p class="text-[11px] text-brand-pine leading-relaxed">
+                            Comprometida con la optimización de protocolos de enfermería, control de privacidad de datos e integración de la comunidad escolar.
+                        </p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-brand-sage/20 flex gap-2 text-brand-forest">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Estudiante INEM</span>
+                    </div>
+                </div>
+                <div class="bg-white/80 backdrop-blur-md p-6 rounded-[2rem_2rem_2rem_2rem] border border-brand-sage/20 hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between shadow-lg">
+                    <div>
+                        <div class="w-12 h-12 rounded-full bg-brand-pine text-brand-mintPale flex items-center justify-center font-serif text-lg font-black mb-4 shadow-sm">SM</div>
+                        <h4 class="font-serif text-xl font-bold text-brand-darkest">Salome Machado</h4>
+                        <p class="text-xs text-brand-forest font-bold mb-3 uppercase tracking-wider">Diseño UX & Desarrollo Frontend</p>
+                        <p class="text-[11px] text-brand-pine leading-relaxed">
+                            Responsable de la experiencia de usuario, la interfaz visual del portal y la accesibilidad, asegurando que el sistema sea intuitivo para toda la comunidad educativa.
+                        </p>
+                    </div>
+                    <div class="pt-4 mt-4 border-t border-brand-sage/20 flex gap-2 text-brand-forest">
+                        <span class="text-[10px] font-bold uppercase tracking-wider">Estudiante INEM</span>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-5 bg-brand-darkest text-brand-mintPale p-6 md:p-8 rounded-[3rem_1.5rem_3rem_1.5rem] flex flex-col justify-between relative overflow-hidden shadow-2xl">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-forest/15 rounded-full blur-2xl"></div>
+                <div class="relative z-10">
+                    <span class="text-[10px] uppercase tracking-widest text-brand-sage font-black block mb-1">Afiliación Institucional</span>
+                    <h4 class="font-serif text-xl md:text-2xl font-bold mb-3">I.E. INEM José Félix de Restrepo</h4>
+                    <p class="text-[10px] text-brand-sage font-semibold uppercase tracking-widest mb-6">Programa de Salud y Tecnología • Medellín</p>
+                    <a href="https://maps.app.goo.gl/8cK2wrraLyWG4RbE8" target="_blank" rel="noopener noreferrer" class="bg-brand-pine rounded-2xl p-4 border border-brand-sage/20 mb-6 flex items-center gap-3 hover:bg-brand-forest hover:-translate-y-1 transition-all duration-300 group cursor-pointer block shadow-md">
+                        <div class="p-2.5 bg-brand-forest/30 text-brand-sage rounded-xl group-hover:scale-110 transition-transform">
+                            <i data-lucide="map-pin" class="w-5 h-5"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[11px] font-bold text-brand-mintPale flex items-center gap-1.5">
+                                <span>Ubicación</span>
+                                <i data-lucide="external-link" class="w-3.5 h-3.5 text-brand-sage opacity-70"></i>
+                            </p>
+                            <p class="text-[10px] text-brand-sage">Medellín, Colombia • Ver en Google Maps</p>
+                        </div>
+                    </a>
+                    <p class="text-xs text-brand-sage/80 leading-relaxed mb-6">
+                        Formando líderes en salud y tecnología, guiados en 2026 hacia el desarrollo e implantación de software que beneficie de forma tangible a nuestra comunidad escolar.
+                    </p>
+                </div>
+                <div class="pt-6 border-t border-brand-sage/10 flex items-center gap-3 relative z-10">
+                    <div class="w-10 h-10 bg-white rounded-xl p-1.5 flex items-center justify-center shadow-md">
+                        <img src="inem.png" alt="Crest Badge" class="w-full h-full object-contain">
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-brand-mintPale">Salud INEM • 2026</p>
+                        <p class="text-[9px] text-brand-sage">Todos los derechos reservados.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-brand-darkest text-brand-mintPale py-12 px-4 md:px-12 border-t border-brand-sage/20 relative z-30">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+        <div class="flex flex-col md:flex-row items-center gap-4">
+            <div class="w-12 h-12 bg-white rounded-full p-2 flex items-center justify-center shadow-md">
+                <img src="inem.png" alt="Logo INEM Footer" class="w-full h-full object-contain" onerror="this.src='https://placehold.co/100x100/0B2B26/DAF1DE?text=INEM'">
+            </div>
+            <div>
+                <span class="font-serif font-bold text-xl block">Salud <span class="text-brand-sage">INEM</span></span>
+                <span class="text-xs text-brand-sage/60 mt-0.5 block">La tecnología al servicio del bienestar clínico estudiantil en 2026.</span>
+            </div>
+        </div>
+        <div class="flex flex-wrap justify-center gap-6 text-xs text-brand-sage">
+            <a href="#proposito" class="hover:text-brand-mintPale transition-colors">Propósito</a>
+            <a href="#beneficios" class="hover:text-brand-mintPale transition-colors">Beneficios</a>
+            <a href="#simulador" class="hover:text-brand-mintPale transition-colors">Simulador</a>
+            <a href="#nosotros" class="hover:text-brand-mintPale transition-colors">Nosotros</a>
+        </div>
+        <div>
+            <span class="text-[10px] text-brand-sage/40 block">© 2026 Salud INEM. Proyecto de Grado, Medellín, Colombia.</span>
+        </div>
+    </div>
+</footer>
+
+<!-- BOTÓN FLOTANTE DE COPIA DE SEGURIDAD -->
+<button id="backupBtn" class="fixed bottom-6 right-6 z-50 bg-brand-pine hover:bg-brand-darkest text-brand-mintPale p-3 rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 active:scale-95 border border-brand-sage/30 flex items-center justify-center group focus:outline-none focus:ring-2 focus:ring-brand-sage" title="Hacer copia de seguridad de los datos">
+    <i data-lucide="save" class="w-6 h-6"></i>
+    <span class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></span>
+</button>
+
+<!-- TOAST PARA FEEDBACK -->
+<div id="backupToast" class="fixed bottom-24 right-6 z-50 bg-brand-darkest text-brand-mintPale px-5 py-3 rounded-2xl shadow-xl border border-brand-sage/30 text-xs font-bold flex items-center gap-2">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span>Copia de seguridad realizada</span>
+</div>
+
+<!-- JAVASCRIPT ACTUALIZADO -->
+<script>
+    lucide.createIcons();
+
+    let counterHoy = 14;
+    let counterReposo = 1;
+    let counterHojas = 1248;
+
+    function registrarVisita() {
+        const nombre = document.getElementById('inputNombre').value.trim();
+        const grado = document.getElementById('inputGrado').value;
+        const seccion = document.getElementById('inputSeccion').value.trim();
+        const motivo = document.getElementById('inputMotivo').value.trim();
+        const estado = document.getElementById('inputEstado').value;
+
+        if (!nombre || !grado || !seccion || !motivo) {
+            alert('Por favor, completa todos los campos obligatorios (*)');
+            return;
+        }
+
+        // Hora actual
+        const now = new Date();
+        let hours = now.getHours();
+        let minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12 || 12;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        const timeStr = `${hours}:${minutes} ${ampm}`;
+
+        const estudianteDisplay = `${nombre} <span class="text-[9px] text-gray-400 font-normal">${grado}-${seccion}</span>`;
+
+        // Badge según selección manual
+        let estadoBadge = '';
+        if (estado === 'observacion') {
+            estadoBadge = `<span class="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-full font-bold">En observación</span>`;
+            counterReposo++;
+            document.getElementById('countReposo').innerText = counterReposo;
+        } else {
+            estadoBadge = `<span class="bg-emerald-100 text-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Dado de alta</span>`;
+        }
+
+        const tbody = document.getElementById('simTableBody');
+        const newRow = document.createElement('tr');
+        newRow.className = "bg-brand-mintPale/45 transition-all duration-500 animate-pulse";
+        newRow.innerHTML = `
+            <td class="py-2.5 px-4 text-brand-forest font-bold">${timeStr}</td>
+            <td class="py-2.5 px-4 font-bold text-brand-darkest">${estudianteDisplay}</td>
+            <td class="py-2.5 px-4 text-brand-forest font-semibold">${motivo}</td>
+            <td class="py-2.5 px-4">${estadoBadge}</td>
+        `;
+        tbody.insertBefore(newRow, tbody.firstChild);
+
+        counterHoy++;
+        counterHojas += 4;
+        document.getElementById('countHoy').innerText = counterHoy;
+        document.getElementById('countHojas').innerText = counterHojas.toLocaleString();
+
+        // Limpiar campos
+        document.getElementById('inputNombre').value = '';
+        document.getElementById('inputSeccion').value = '';
+        document.getElementById('inputMotivo').value = '';
+        document.getElementById('inputEstado').value = 'alta';
+
+        const feedback = document.getElementById('feedbackMsg');
+        feedback.style.opacity = '1';
+        setTimeout(() => {
+            feedback.style.opacity = '0';
+            newRow.classList.remove('bg-brand-mintPale/45', 'animate-pulse');
+        }, 3000);
+    }
+
+    // ----- FUNCIÓN DE COPIA DE SEGURIDAD SINCRONIZADA CON EL BACKEND -----
+    async function hacerCopiaSeguridad() {
+        // 1. Verificar si existe copia previa en localStorage
+        const existeBackup = localStorage.getItem('saludINEM_backup') !== null;
+        if (existeBackup) {
+            const sobrescribir = confirm('Ya existe una copia de seguridad anterior en este navegador.\n¿Deseas sobrescribirla?');
+            if (!sobrescribir) return;
+        }
+
+        const confirmar = confirm('¿Estás seguro de realizar una nueva copia de seguridad?\nSe descargará un archivo JSON con los registros clínicos y los usuarios de la base de datos.');
+        if (!confirmar) return;
+
+        try {
+            // 2. Traer usuarios reales desde MySQL a través del backend
+            const resp = await fetch("/api/usuarios");
+            if (!resp.ok) throw new Error("Error al consultar usuarios");
+            const usuariosDB = await resp.json();
+
+            // 3. Recopilar registros clínicos visibles en la tabla
+            const tbody = document.getElementById('simTableBody');
+            const registros = [];
+            tbody.querySelectorAll('tr').forEach(row => {
+                const c = row.querySelectorAll('td');
+                if (c.length === 4) {
+                    const badge = c[3].querySelector('span');
+                    registros.push({
+                        hora: c[0].textContent.trim(),
+                        estudiante: c[1].textContent.trim(),
+                        motivo: c[2].textContent.trim(),
+                        estado: badge ? badge.textContent.trim() : c[3].textContent.trim()
+                    });
+                }
+            });
+
+            // 4. Contadores actuales
+            const contadores = {
+                hoy: parseInt(document.getElementById('countHoy').textContent.replace(/,/g, '')),
+                reposo: parseInt(document.getElementById('countReposo').textContent),
+                hojas: parseInt(document.getElementById('countHojas').textContent.replace(/,/g, ''))
+            };
+
+            // 5. Armar el objeto de respaldo
+            const backup = {
+                timestamp: new Date().toISOString(),
+                contadores: contadores,
+                usuariosRegistrados: usuariosDB,      // ← viene de MySQL
+                registrosClinicos: registros          // ← de la tabla en vivo
+            };
+
+            // 6. Guardar en localStorage (por si acaso)
+            try {
+                localStorage.setItem('saludINEM_backup', JSON.stringify(backup));
+            } catch (e) {
+                console.warn('No se pudo guardar en localStorage:', e);
+            }
+
+            // 7. Descargar archivo JSON
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `saludINEM_backup_${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // 8. Mostrar toast de éxito
+            const toast = document.getElementById('backupToast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+
+        } catch (err) {
+            console.error(err);
+            alert("❌ No se pudo contactar con el backend para la copia.\n¿Está corriendo el servidor en localhost:8080?");
+        }
+    }
+
+    // Asignar evento al botón
+    document.getElementById('backupBtn').addEventListener('click', hacerCopiaSeguridad);
+</script>
+</body>
+</html>
