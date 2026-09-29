@@ -7,9 +7,13 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface UsuariosService {
-    public Iterable <Usuarios> findAll();
-    public Page<Usuarios> findAll(Pageable pageable);
-    public Optional<Usuarios> findById(Long id);
-    public Usuarios save(Usuarios usuarios);
-    public void deleteById(Long id);
+
+    Iterable<Usuarios> findAll();
+    Page<Usuarios> findAll(Pageable pageable);
+    Optional<Usuarios> findById(Long id);
+    Usuarios save(Usuarios user);
+    void deleteById(Long id);
+
+    Optional<Usuarios> findByEmail(String email);      // ← NUEVO
+    Optional<Usuarios> login(String email, String password); // ← NUEVO
 }

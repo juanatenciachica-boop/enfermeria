@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Salud INEM</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #9dc3a9;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 850px;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .left {
+            width: 40%;
+            background-color: #d1e2d6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .left img { width: 100%; max-width: 220px; height: auto; object-fit: contain; }
+
+        .right {
+            width: 60%;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .right h2 {
+            text-align: center;
+            color: #1b4d3e;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .input-group { margin-bottom: 20px; position: relative; }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            background-color: #eaf4ed;
+            font-size: 15px;
+            color: #333;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s;
+            appearance: none;
+        }
+
+        .input-group select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 15px;
+            cursor: pointer;
+            color: #555;
+        }
+
+        .input-group input::placeholder { color: #888; }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: #1b4d3e;
+            box-shadow: 0 0 0 3px rgba(27, 77, 62, 0.1);
+            background-color: #fff;
+        }
+
+        .input-group.error input,
+        .input-group.error select {
+            border-color: #d9534f;
+            background-color: #fdf2f2;
+        }
+
+        .input-group.exito input,
+        .input-group.exito select {
+            border-color: #2e7d32;
+            background-color: #f2f9f3;
+        }
+
+        .mensaje-error {
+            color: #d9534f;
+            font-size: 11px;
+            margin-top: 5px;
+            display: none;
+            padding-left: 5px;
+        }
+
+        .input-group.error .mensaje-error { display: block; }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background-color: #1b4d3e;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover { background-color: #143b2f; }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background-color: #6c8a7f; cursor: not-allowed; }
+
+        .extra {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .extra a { color: #1b4d3e; text-decoration: none; font-weight: bold; }
+        .extra a:hover { text-decoration: underline; }
+
+        @media (max-width: 768px) {
+            .container { flex-direction: column; max-width: 400px; }
+            .left, .right { width: 100%; }
+            .left { padding: 30px; height: 200px; }
+            .right { padding: 30px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="left">
+        <img src="inem.png" alt="Escudo INEM">
+    </div>
+
+    <div class="right">
+        <h2>Crear Cuenta</h2>
+
+        <form id="formRegistro" novalidate>
+            <div class="input-group" id="campoNombre">
+                <input type="text" id="nombre" placeholder="Nombre completo">
+                <span class="mensaje-error">Ingrese nombre y apellido válidos.</span>
+            </div>
+
+            <div class="input-group" id="campoEmail">
+                <input type="email" id="email" placeholder="Correo electrónico">
+                <span class="mensaje-error">Ingrese un correo válido.</span>
+            </div>
+
+            <div class="input-group" id="campoPassword">
+                <input type="password" id="password" placeholder="Contraseña">
+                <span class="mensaje-error">Mínimo 8 caracteres, 1 letra, 1 número y 1 símbolo.</span>
+            </div>
+
+            <div class="input-group" id="campoCargo">
+                <select id="cargo" required>
+                    <option value="" disabled selected>Seleccione su cargo</option>
+                    <option value="Estudiante">Estudiante</option>
+                    <option value="Profesor">Profesor</option>
+                    <option value="Enfermera">Enfermera</option>
+                </select>
+                <span class="mensaje-error">Debe seleccionar un cargo.</span>
+            </div>
+
+            <button type="submit" class="btn" id="btnRegistrar">Registrarse</button>
+        </form>
+
+        <div class="extra">
+            ¿Ya tienes cuenta? <a href="inicio.html">Inicia sesión</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = "/api/usuarios";   // ruta relativa → mismo servidor
+
+    const patrones = {
+        nombre: /^[a-zA-ZÀ-ÿ\s]{3,40}$/,
+        email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+        password: /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&#\-])[A-Za-z\d@$!%*?&#\-]{8,}$/
+    };
+
+    const form = document.getElementById('formRegistro');
+    const inputs = {
+        nombre: document.getElementById('nombre'),
+        email: document.getElementById('email'),
+        password: document.getElementById('password'),
+        cargo: document.getElementById('cargo')
+    };
+
+    function validarCampo(input, regex, contenedorId) {
+        const contenedor = document.getElementById(contenedorId);
+        const esValido = regex ? regex.test(input.value.trim()) : input.value !== "";
+        contenedor.classList.toggle('error', !esValido);
+        contenedor.classList.toggle('exito', esValido);
+        return esValido;
+    }
+
+    inputs.nombre.addEventListener('keyup', () => validarCampo(inputs.nombre, patrones.nombre, 'campoNombre'));
+    inputs.email.addEventListener('keyup', () => validarCampo(inputs.email, patrones.email, 'campoEmail'));
+    inputs.password.addEventListener('keyup', () => validarCampo(inputs.password, patrones.password, 'campoPassword'));
+    inputs.cargo.addEventListener('change', () => validarCampo(inputs.cargo, null, 'campoCargo'));
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const vNombre = validarCampo(inputs.nombre, patrones.nombre, 'campoNombre');
+        const vEmail = validarCampo(inputs.email, patrones.email, 'campoEmail');
+        const vPass = validarCampo(inputs.password, patrones.password, 'campoPassword');
+        const vCargo = validarCampo(inputs.cargo, null, 'campoCargo');
+
+        if (!(vNombre && vEmail && vPass && vCargo)) return;
+
+        const nuevoUsuario = {
+            nombre: inputs.nombre.value.trim(),
+            email: inputs.email.value.trim(),
+            password: inputs.password.value,
+            cargo: inputs.cargo.value,
+            telefono: "",
+            foto: ""
+        };
+
+        const btn = document.getElementById('btnRegistrar');
+        btn.disabled = true;
+        btn.textContent = "Registrando...";
+
+        try {
+            const resp = await fetch(API, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(nuevoUsuario)
+            });
+
+            if (resp.status === 201) {
+                alert("✅ ¡Registro exitoso! Ahora puedes iniciar sesión.");
+                window.location.href = "inicio.html";
+            } else if (resp.status === 409) {
+                alert("❌ El correo ya está registrado.");
+            } else {
+                const data = await resp.json().catch(() => ({}));
+                alert("❌ Error: " + (data.mensaje || "No se pudo registrar"));
+            }
+        } catch (err) {
+            console.error(err);
+            alert("❌ No se pudo conectar con el servidor. ¿El backend está corriendo?");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Registrarse";
+        }
+    });
+</script>
+</body>
+</html>
